@@ -1,0 +1,6 @@
+{
+  "name": "Daily Earn Pro",
+  "description": "Mobile-first creator studio and earning guide app with social poster maker, YouTube thumbnail designer, Hindi & English caption generator, and freelancing roadmaps.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
