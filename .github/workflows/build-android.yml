@@ -32,12 +32,44 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses
+      - name: Set up Android SDK Environment
         run: |
-          yes | sdkmanager --licenses || true
+          ANDROID_HOME_DIR="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          if [ ! -d "$ANDROID_HOME_DIR" ]; then
+            ANDROID_HOME_DIR="$HOME/Android/Sdk"
+            mkdir -p "$ANDROID_HOME_DIR"
+          fi
+          echo "ANDROID_HOME=$ANDROID_HOME_DIR" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME_DIR" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME_DIR/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME_DIR/cmdline-tools/tools/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME_DIR/platform-tools" >> "$GITHUB_PATH"
+
+      - name: Install Android SDK Components & Accept Licenses
+        run: |
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+          SDKMANAGER_BIN=""
+          if command -v sdkmanager >/dev/null 2>&1; then
+            SDKMANAGER_BIN="$(command -v sdkmanager)"
+          elif [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER_BIN="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          elif [ -x "$ANDROID_HOME/tools/bin/sdkmanager" ]; then
+            SDKMANAGER_BIN="$ANDROID_HOME/tools/bin/sdkmanager"
+          fi
+
+          if [ -n "$SDKMANAGER_BIN" ]; then
+            echo "Using sdkmanager from: $SDKMANAGER_BIN"
+            echo "Accepting Android SDK licenses non-interactively..."
+            yes | "$SDKMANAGER_BIN" --licenses > /dev/null 2>&1 || true
+
+            echo "Installing required Android SDK platform and build tools..."
+            yes | "$SDKMANAGER_BIN" --install "platform-tools" "platforms;android-36" "platforms;android-35" "platforms;android-34" "build-tools;36.0.0" "build-tools;35.0.0" "build-tools;34.0.0" > /dev/null 2>&1 || true
+          else
+            echo "Warning: sdkmanager not found in standard paths; relying on runner SDK"
+          fi
 
       - name: Install Project Dependencies
         run: |
@@ -83,8 +115,11 @@ jobs:
 
       - name: Build Debug APK with Gradle
         working-directory: android
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
         run: |
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Locate Debug APK
         id: find_apk
@@ -100,7 +135,7 @@ jobs:
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DailyEarnPro-v1.0.0-Debug-APK
+          name: Daily-Earn-Pro-APK
           path: ${{ steps.find_apk.outputs.apk_path }}
           retention-days: 30
           if-no-files-found: error
