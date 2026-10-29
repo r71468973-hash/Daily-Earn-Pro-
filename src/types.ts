@@ -1,7 +1,23 @@
 export type Language = 'en' | 'hi';
 export type Theme = 'light' | 'dark';
 
-export type ActiveTab = 'home' | 'poster' | 'thumbnail' | 'caption' | 'work' | 'earning' | 'settings';
+export type ActiveTab = 'home' | 'poster' | 'thumbnail' | 'caption' | 'work' | 'earning' | 'settings' | 'admin';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName?: string;
+  role: 'user' | 'admin';
+  createdAt?: string;
+  lastLoginAt?: string;
+  designsCreatedCount?: number;
+}
+
+export interface AppStats {
+  totalUsersCount: number;
+  totalDesignsCreated: number;
+  updatedAt: string;
+}
 
 export interface PosterConfig {
   headline: string;

@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and activity record in Daily Earn Pro",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID of the user",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name or handle of the user",
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user, e.g. user or admin",
+          "enum": ["user", "admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO string timestamp when account was registered"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "description": "ISO string timestamp of the last login session"
+        },
+        "designsCreatedCount": {
+          "type": "number",
+          "description": "Total number of designs exported or created"
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authorized administrator mapping record",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Administrator verified email address",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "description": "Admin privileges tier",
+          "enum": ["admin", "superadmin"]
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp when admin status was granted"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "AppStats": {
+      "title": "AppStats",
+      "description": "Aggregated application usage statistics for the admin dashboard",
+      "type": "object",
+      "properties": {
+        "totalUsersCount": {
+          "type": "number",
+          "description": "Total number of registered users"
+        },
+        "totalDesignsCreated": {
+          "type": "number",
+          "description": "Total poster, thumbnail, and caption creations across all users"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last aggregation update"
+        }
+      },
+      "required": ["totalDesignsCreated"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private user profiles. Accessible only by the owner user and verified system administrators."
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminRecord"
+      },
+      "description": "List of authorized administrator UIDs. Used by security rules to enforce Zero-Trust RBAC."
+    },
+    "/app_stats/{statId}": {
+      "schema": {
+        "$ref": "#/entities/AppStats"
+      },
+      "description": "Global usage metrics and app stats. Readable only by verified administrators."
+    }
+  }
+}

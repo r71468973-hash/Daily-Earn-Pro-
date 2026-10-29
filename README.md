@@ -38,6 +38,12 @@
    - सुरक्षित एडमोब प्लेसमेंट एरिया और एंड्रॉइड इंटीग्रेशन गाइड।
    - पॉलिसी के अनुसार जब तक अपनी एड आईडी कॉन्फ़िगर नहीं की जाती, तब तक सभी विज्ञापन बंद रहते हैं।
 
+7. **नेटिव ऐप शेयर इंटीग्रेशन (Native App Share Feature)**
+   - होम डैशबोर्ड पर 1-टैप शेयर बटन।
+   - Android APK में Capacitor Share Plugin के जरिए नेटिव शेयर मेनू (WhatsApp, Telegram, Gmail, Bluetooth आदि) खुलता है।
+   - मोबाइल वेब में Web Share API और डेस्कटॉप पर ऑटोमेटिक कॉपी लिंक फॉलबैक।
+   - असली Play Store लिंक कॉन्फ़िगर करने के लिए `src/services/shareService.ts` में स्पष्ट जगह दी गई है (`OFFICIAL_PLAY_STORE_URL`)। कोई फर्जी लिंक नहीं बनाया गया है।
+
 ---
 
 ## 📱 सिर्फ मोबाइल से APK कैसे बनाएं (Build Android APK using only Phone)
@@ -114,8 +120,26 @@ npx cap open android
 
 ---
 
+## 🔐 Firebase Authentication & Admin Setup Guide (लॉगिन व एडमिन सेटअप)
+
+### 1. Firebase Console में Email/Password प्रदाता सक्षम करें
+1. [Firebase Console](https://console.firebase.google.com) खोलें और अपना प्रोजेक्ट चुनें (`infra-benefit-qlcf1`)।
+2. बाएँ मेन्यू से **Build > Authentication** पर जाएँ।
+3. **"Sign-in method"** टैब पर क्लिक करें।
+4. **"Email/Password"** प्रोवाइडर चुनें, **"Enable"** टॉगल चालू करें और **Save** करें।
+*(नोट: पासवर्ड सुरक्षा Firebase के सर्वर पर एन्क्रिप्टेड रहती है, ऐप कभी भी पासवर्ड को डेटाबेस या कोड में सेव नहीं करता)*
+
+### 2. Admin Dashboard व Zero-Trust सुरक्षा
+- **मुख्य एडमिन ईमेल:** `r71468973@gmail.com`
+- **सुरक्षा नियम (Security Rules):** Firestore Rules में `allow list: if isAdmin();` नियम लागू है। सामान्य यूजर्स या बिना अनुमति वाले लोग कभी भी दूसरे यूजर्स की जानकारी या `/app_stats` नहीं देख सकते।
+- अधिकृत एडमिन लॉगिन करते ही शीर्ष हेडर में और बॉटम नेविगेशन में **Admin Panel** का विकल्प दिखाई देगा, जिससे लाइव यूजर लिस्ट और कुल डिजाइन आंकड़े देखे जा सकते हैं।
+
+---
+
 ## 🛠️ सामान्य समस्याएं और समाधान (Troubleshooting)
 
+- **समस्या: GitHub Actions में `package-lock.json` या dependency conflict की वजह से npm ci फेल हो रहा था?**
+  - **समाधान:** `esbuild` और `vite` के पीयर-डिपेंडेंसी कनफ्लिक्ट को ठीक कर दिया गया है और `package-lock.json` को कंसिस्टेंट वर्शन के साथ जेनरेट कर दिया गया है।
 - **समस्या: GitHub Actions में Gradle build fail हो रहा है?**
   - **समाधान:** सुनिश्चित करें कि `.github/workflows/build-android.yml` में `npx cap add android` और `chmod +x android/gradlew` शामिल है। यह वर्कफ्लो में पहले से कॉन्फ़िगर है।
 - **समस्या: फोटो डाउनलोड होने के बाद गैलरी में नहीं दिख रही?**

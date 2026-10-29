@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { ActiveTab, Language, Theme, SavedProject, ToastMessage, PosterConfig, ThumbnailConfig } from './types';
 import { translations } from './translations';
 import { getSavedProjects, saveProject, deleteProject, clearAllProjects } from './services/storage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { Toast } from './components/Toast';
+import { AuthModal } from './components/AuthModal';
 import { HomeDashboard } from './components/HomeDashboard';
 import { PosterMaker } from './components/PosterMaker';
 import { ThumbnailMaker } from './components/ThumbnailMaker';
@@ -12,8 +14,9 @@ import { CaptionGenerator } from './components/CaptionGenerator';
 import { MyWork } from './components/MyWork';
 import { EarningTips } from './components/EarningTips';
 import { Settings } from './components/Settings';
+import { AdminDashboard } from './components/AdminDashboard';
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [language, setLanguage] = useState<Language>(() => {
     return (localStorage.getItem('daily_earn_lang') as Language) || 'hi';
@@ -23,6 +26,9 @@ export default function App() {
   });
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [projects, setProjects] = useState<SavedProject[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const { user, isAdmin, incrementDesignsCreated } = useAuth();
 
   // State to hold items reopened from My Work
   const [editingPoster, setEditingPoster] = useState<PosterConfig | null>(null);
@@ -74,6 +80,8 @@ export default function App() {
     });
     if (res.success) {
       setProjects(getSavedProjects());
+      // Increment user design creation counter in Firestore
+      incrementDesignsCreated();
     } else if (res.error) {
       showToast('error', res.error);
     }
@@ -111,10 +119,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLoginSuccess = () => {
+    setActiveTab('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* Toast Notification Container */}
       <Toast toast={toast} onClose={() => setToast(null)} />
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        language={language}
+        onShowToast={showToast}
+        onLoginSuccess={handleLoginSuccess}
+      />
 
       {/* Top Application Header */}
       <Header
@@ -123,6 +145,8 @@ export default function App() {
         activeTab={activeTab}
         onNavigate={handleNavigate}
         savedCount={projects.length}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onShowToast={showToast}
       />
 
       {/* Main Content Area */}
@@ -133,6 +157,8 @@ export default function App() {
             onNavigate={handleNavigate}
             savedProjects={projects}
             onReopenProject={handleReopenProject}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onShowToast={showToast}
           />
         )}
 
@@ -189,6 +215,15 @@ export default function App() {
             onThemeChange={setTheme}
             onClearStorage={handleClearAll}
             onShowToast={showToast}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {activeTab === 'admin' && (
+          <AdminDashboard
+            language={language}
+            onShowToast={showToast}
           />
         )}
       </main>
@@ -198,7 +233,16 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={handleNavigate}
         language={language}
+        isAdmin={isAdmin}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

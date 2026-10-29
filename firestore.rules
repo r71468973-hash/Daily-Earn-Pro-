@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Security Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Zero-Trust Admin check: checks /admins collection or verified owner email
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'r71468973@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    // 3. User Profile Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.uid is string && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() <= 256 &&
+             data.role in ['user', 'admin'] &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
+             (!('lastLoginAt' in data) || (data.lastLoginAt is string && data.lastLoginAt.size() <= 64)) &&
+             (!('designsCreatedCount' in data) || (data.designsCreatedCount is number && data.designsCreatedCount >= 0));
+    }
+
+    function isValidUserCreate() {
+      return incoming().uid == request.auth.uid &&
+             incoming().role == 'user' &&
+             isValidUserProfile(incoming()) &&
+             incoming().keys().hasAll(['uid', 'email', 'role']) &&
+             incoming().keys().hasOnly(['uid', 'email', 'displayName', 'role', 'createdAt', 'lastLoginAt', 'designsCreatedCount']);
+    }
+
+    function isValidUserUpdate() {
+      return isValidUserProfile(incoming()) &&
+             incoming().uid == existing().uid &&
+             (incoming().role == existing().role || isAdmin()) &&
+             incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'lastLoginAt', 'designsCreatedCount', 'role']);
+    }
+
+    // 4. User Profiles Collection: Private and Isolated
+    match /users/{userId} {
+      // Individual document read allowed only for the profile owner or verified admin
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+
+      // Query listing allowed strictly for admins (protects all users' PII)
+      allow list: if isAdmin();
+
+      // Creation allowed strictly for the authenticated owner with role: 'user'
+      allow create: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       isValidUserCreate();
+
+      // Updates allowed for the owner (updating permitted profile fields) or an admin
+      allow update: if isValidId(userId) &&
+                       ((isOwner(userId) && isValidUserUpdate()) || isAdmin());
+
+      // Deletion strictly limited to admins
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // 5. Admin Directory Collection: Protected Privileges
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isAdmin();
+      allow write: if isValidId(adminId) && isAdmin();
+    }
+
+    // 6. Application Usage & Stats Collection
+    match /app_stats/{statId} {
+      allow read: if isValidId(statId) && isAdmin();
+      allow create, update: if isValidId(statId) && isSignedIn();
+      allow delete: if isValidId(statId) && isAdmin();
+    }
+  }
+}

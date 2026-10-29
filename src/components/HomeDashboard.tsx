@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActiveTab, Language, SavedProject } from '../types';
 import { translations } from '../translations';
 import { AdMobPlaceholder } from './AdMobPlaceholder';
+import { useAuth } from '../contexts/AuthContext';
+import { shareApp } from '../services/shareService';
 import {
   Sparkles,
   LayoutTemplate,
@@ -15,6 +17,11 @@ import {
   ExternalLink,
   ChevronRight,
   Star,
+  LogIn,
+  ShieldCheck,
+  UserCheck,
+  Share2,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface HomeDashboardProps {
@@ -22,6 +29,8 @@ interface HomeDashboardProps {
   onNavigate: (tab: ActiveTab) => void;
   savedProjects: SavedProject[];
   onReopenProject: (project: SavedProject) => void;
+  onOpenAuthModal?: () => void;
+  onShowToast: (type: 'success' | 'error' | 'info', message: string) => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -29,8 +38,26 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onNavigate,
   savedProjects,
   onReopenProject,
+  onOpenAuthModal,
+  onShowToast,
 }) => {
   const t = translations[language];
+  const { user, isAdmin } = useAuth();
+  const [sharing, setSharing] = useState(false);
+
+  const handleShareApp = async () => {
+    try {
+      setSharing(true);
+      const res = await shareApp(language);
+      if (res.message) {
+        onShowToast(res.success ? 'success' : 'error', res.message);
+      }
+    } catch (err: any) {
+      onShowToast('error', language === 'hi' ? 'शेयर करने में त्रुटि हुई' : 'Failed to share');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const tools = [
     {
@@ -89,7 +116,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             {t.home.subtitle}
           </p>
 
-          <div className="pt-2 flex flex-wrap gap-2.5">
+          <div className="pt-2 flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => onNavigate('poster')}
               className="py-3 px-5 rounded-2xl bg-white text-blue-700 hover:bg-blue-50 active:scale-95 font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2"
@@ -103,6 +130,17 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               className="py-3 px-4 rounded-2xl bg-white/15 hover:bg-white/20 backdrop-blur-md text-white active:scale-95 font-bold text-xs sm:text-sm border border-white/25 transition-all flex items-center gap-1.5"
             >
               <span>{t.home.learnHow}</span>
+            </button>
+
+            {/* Quick Hero Share Button */}
+            <button
+              onClick={handleShareApp}
+              disabled={sharing}
+              className="py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-900 font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5 disabled:opacity-75"
+              title={t.home.shareApp}
+            >
+              <Share2 className="w-4 h-4 text-slate-900" />
+              <span>{t.home.shareApp}</span>
             </button>
           </div>
         </div>
@@ -144,6 +182,56 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </div>
 
+      {/* Admin Access Quick Banner (Only for Verified Admin) */}
+      {isAdmin && (
+        <div className="bg-linear-to-r from-amber-500/15 via-amber-400/10 to-transparent border border-amber-300 dark:border-amber-800/80 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-xs">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                {language === 'hi' ? 'एडमिन विशेषाधिकार सक्रिय (Admin Access)' : 'Verified Admin Privileges Active'}
+              </p>
+              <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                {language === 'hi' ? 'कुल यूजर्स और सिस्टम एनालिटिक्स देखने के लिए टैप करें' : 'Tap to inspect live user stats & system metrics'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('admin')}
+            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 text-xs font-bold transition-all shrink-0"
+          >
+            {language === 'hi' ? 'डैशबोर्ड खोलें' : 'Open Admin'}
+          </button>
+        </div>
+      )}
+
+      {/* Login Invitation Banner (When Unauthenticated) */}
+      {!user && onOpenAuthModal && (
+        <div className="bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+              <LogIn className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">
+                {language === 'hi' ? 'क्लाउड सिंक के लिए लॉगिन करें' : 'Sign In to Daily Earn Pro'}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {language === 'hi' ? 'अपने डिजाइन्स और प्रोफाइल को सुरक्षित रखें' : 'Safely backup and access your creations anywhere'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenAuthModal}
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold transition-all shrink-0 shadow-xs"
+          >
+            {language === 'hi' ? 'लॉगिन / साइन अप' : 'Login / Sign Up'}
+          </button>
+        </div>
+      )}
+
       {/* Primary Tools Grid */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
@@ -182,6 +270,44 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Dedicated Native Share App Card */}
+      <div className="bg-linear-to-r from-blue-700 via-indigo-600 to-blue-800 text-white rounded-3xl p-5 sm:p-6 shadow-xl shadow-blue-700/20 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold text-amber-300">
+              <Share2 className="w-3 h-3" />
+              <span>{language === 'hi' ? 'दोस्तों के साथ शेयर करें' : 'Share with Creators'}</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-white">
+              {t.home.shareApp}
+            </h3>
+            <p className="text-xs text-blue-100 max-w-md leading-relaxed">
+              {t.home.shareAppDesc}
+            </p>
+          </div>
+
+          <button
+            onClick={handleShareApp}
+            disabled={sharing}
+            className="py-3 px-6 rounded-2xl bg-white text-blue-700 hover:bg-blue-50 active:scale-95 font-extrabold text-xs sm:text-sm shadow-lg shadow-black/10 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-75"
+            style={{ minHeight: '48px' }}
+          >
+            <Share2 className="w-4 h-4 text-blue-600" />
+            <span>{language === 'hi' ? 'अभी शेयर करें (Share Now)' : 'Share Now'}</span>
+          </button>
+        </div>
+
+        {/* Supported Channels Preview Pills */}
+        <div className="pt-2.5 border-t border-white/20 flex flex-wrap items-center gap-2 text-[11px] text-blue-100 font-medium">
+          <span className="opacity-80">{language === 'hi' ? 'उपलब्ध माध्यम:' : 'Supported via:'}</span>
+          <span className="px-2.5 py-0.5 rounded-md bg-white/15 backdrop-blur-xs font-semibold">WhatsApp</span>
+          <span className="px-2.5 py-0.5 rounded-md bg-white/15 backdrop-blur-xs font-semibold">Telegram</span>
+          <span className="px-2.5 py-0.5 rounded-md bg-white/15 backdrop-blur-xs font-semibold">Gmail</span>
+          <span className="px-2.5 py-0.5 rounded-md bg-white/15 backdrop-blur-xs font-semibold">Bluetooth</span>
+          <span className="px-2.5 py-0.5 rounded-md bg-white/15 backdrop-blur-xs font-semibold">{language === 'hi' ? '+ अन्य सभी Apps' : '+ All Apps'}</span>
         </div>
       </div>
 

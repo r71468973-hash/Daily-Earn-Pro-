@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Language, Theme } from '../types';
+import { Language, Theme, ActiveTab } from '../types';
 import { translations } from '../translations';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Settings as SettingsIcon,
   Globe,
@@ -16,6 +17,10 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
+  User,
+  LogIn,
+  LogOut,
+  Flame,
 } from 'lucide-react';
 
 interface SettingsProps {
@@ -25,6 +30,8 @@ interface SettingsProps {
   onThemeChange: (theme: Theme) => void;
   onClearStorage: () => void;
   onShowToast: (type: 'success' | 'error' | 'info', message: string) => void;
+  onOpenAuthModal?: () => void;
+  onNavigate?: (tab: ActiveTab) => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -34,12 +41,26 @@ export const Settings: React.FC<SettingsProps> = ({
   onThemeChange,
   onClearStorage,
   onShowToast,
+  onOpenAuthModal,
+  onNavigate,
 }) => {
   const t = translations[language];
+  const { user, profile, isAdmin, logout } = useAuth();
+
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showApkGuideModal, setShowApkGuideModal] = useState(false);
   const [showFaqModal, setShowFaqModal] = useState(false);
+  const [showFirebaseModal, setShowFirebaseModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      onShowToast('info', language === 'hi' ? 'सफलतापूर्वक लॉगआउट हो गया।' : 'Logged out successfully.');
+    } catch {
+      onShowToast('error', t.common.error);
+    }
+  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -54,6 +75,87 @@ export const Settings: React.FC<SettingsProps> = ({
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           {t.settings.subtitle}
         </p>
+      </div>
+
+      {/* Account & Authentication Card */}
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+            <User className="w-4 h-4 text-blue-600" />
+            <span>{t.auth.account}</span>
+          </label>
+          <button
+            onClick={() => setShowFirebaseModal(true)}
+            className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+          >
+            <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <span>Firebase Console Setup</span>
+          </button>
+        </div>
+
+        {user ? (
+          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-slate-900 dark:text-white">
+                  {profile?.displayName || user.email?.split('@')[0]}
+                </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    isAdmin
+                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'
+                      : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200'
+                  }`}
+                >
+                  {isAdmin ? t.auth.adminBadge : t.auth.userBadge}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                {user.email}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {isAdmin && onNavigate && (
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 text-xs font-bold transition-all flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{t.auth.logout}</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 bg-blue-50/70 dark:bg-slate-800/50 rounded-xl border border-blue-100 dark:border-slate-700 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {t.auth.guest}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {t.auth.loginPrompt}
+              </p>
+            </div>
+            {onOpenAuthModal && (
+              <button
+                onClick={onOpenAuthModal}
+                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 shadow-xs"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>{t.auth.login}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Language Preferences */}
@@ -160,8 +262,8 @@ export const Settings: React.FC<SettingsProps> = ({
             <span className="font-mono text-slate-800 dark:text-slate-200">{t.settings.packageId}</span>
           </div>
           <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-            <span>Version</span>
-            <span className="font-semibold text-blue-600 dark:text-blue-400">{t.settings.version}</span>
+            <span>Authentication</span>
+            <span className="font-semibold text-emerald-600">Firebase Auth (Email/Pass)</span>
           </div>
           <div className="flex justify-between py-1">
             <span>Platform Support</span>
@@ -202,7 +304,78 @@ export const Settings: React.FC<SettingsProps> = ({
         </button>
       </div>
 
-      {/* Android Mobile Phone APK Guide Modal */}
+      {/* Firebase Console Setup Modal */}
+      {showFirebaseModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-500" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  Firebase Authentication Console Setup Guide
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowFirebaseModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200">
+                <p className="font-bold mb-1">
+                  {language === 'hi' ? 'महत्वपूर्ण निर्देश (Required Step)' : 'Important Requirement'}
+                </p>
+                <p>
+                  {language === 'hi'
+                    ? 'Firebase में Email/Password लॉगिन चालू करने के लिए Firebase Console में 1-क्लिक Enable करना आवश्यक होता है।'
+                    : 'To allow users to register and sign in with Email & Password, you must enable the Email/Password sign-in provider in your Firebase project.'}
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <p className="font-bold text-slate-900 dark:text-white mb-0.5">
+                    {language === 'hi' ? '1. Firebase Console खोलें' : '1. Open Firebase Console'}
+                  </p>
+                  <p className="text-[11px]">
+                    Go to <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-blue-600 underline font-mono">console.firebase.google.com</a> and select your project.
+                  </p>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <p className="font-bold text-slate-900 dark:text-white mb-0.5">
+                    {language === 'hi' ? '2. Authentication मेनू पर जाएं' : '2. Navigate to Authentication'}
+                  </p>
+                  <p className="text-[11px]">
+                    Left sidebar में <strong>Build &gt; Authentication</strong> पर क्लिक करें।
+                  </p>
+                </div>
+
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <p className="font-bold text-slate-900 dark:text-white mb-0.5">
+                    {language === 'hi' ? '3. Email/Password सक्षम (Enable) करें' : '3. Enable Email/Password Provider'}
+                  </p>
+                  <p className="text-[11px]">
+                    <strong>"Sign-in method"</strong> टैब में जाएं &gt; <strong>"Email/Password"</strong> पर क्लिक करें &gt; स्विच को <strong>"Enable"</strong> करें और <strong>Save</strong> पर क्लिक करें।
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowFirebaseModal(false)}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl active:scale-98 transition-transform"
+              >
+                {t.common.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Android Phone APK Guide Modal */}
       {showApkGuideModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-5 shadow-2xl">
@@ -311,17 +484,17 @@ export const Settings: React.FC<SettingsProps> = ({
 
             <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p className="font-semibold text-slate-900 dark:text-white">
-                1. 100% Local Device Storage
+                1. Authentication & Security
               </p>
               <p>
-                All your posters, thumbnails, and saved captions are stored exclusively inside your phone's browser/local device storage. Daily Earn Pro does not collect your phone number, contacts, location, or private photos.
+                Your account password is encrypted and securely processed by Firebase Authentication. Daily Earn Pro never stores your plain password in any HTML, JavaScript, or database field.
               </p>
 
               <p className="font-semibold text-slate-900 dark:text-white">
-                2. No Automated Payment or Investment Guarantees
+                2. User Privacy & Zero-Trust Access
               </p>
               <p>
-                Daily Earn Pro is a creator utility application. It does not operate investment schemes, pay-to-click schemes, or promise automated income. Users earn solely by creating digital assets and rendering freelance services to their own independent clients.
+                User profile data is strictly isolated: regular users cannot read or access other creators' accounts or creations. Firestore Security Rules enforce mathematical attribute-based access control.
               </p>
 
               <p className="font-semibold text-slate-900 dark:text-white">
