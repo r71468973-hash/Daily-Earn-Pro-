@@ -218,8 +218,11 @@ export const translations = {
       viewFaq: 'View Frequently Asked Questions',
     },
     admob: {
-      placeholderLabel: 'Google AdMob Banner Area (Ready for Integration)',
-      notice: 'In production Android APK, this area shows Google Mobile Ads banner after SDK setup.',
+      placeholderLabel: 'Google AdMob Banner (Test Mode Active)',
+      notice: 'Official Google Mobile Ads SDK integrated. Test ad unit active on Android APK.',
+      testBadge: 'Test Ad',
+      setupTitle: 'Google AdMob Configuration & Safety',
+      liveAdsNotice: 'Configured with official Google test IDs. Replace with your production IDs before Play Store release.',
     },
     common: {
       copy: 'Copy',
@@ -454,8 +457,11 @@ export const translations = {
       viewFaq: 'अक्सर पूछे जाने वाले सवाल देखें',
     },
     admob: {
-      placeholderLabel: 'गूगल एडमोब बैनर एरिया (भविष्य के लिए तैयार)',
-      notice: 'एंड्रॉइड ऐप में SDK कॉन्फ़िगर करने के बाद यहां सुरक्षित विज्ञापन दिखाई देंगे।',
+      placeholderLabel: 'गूगल एडमोब बैनर (टेस्ट मोड सक्रिय)',
+      notice: 'ऑफिशियल गूगल मोबाइल ऐड्स SDK लोड है। एंड्रॉइड ऐप में टेस्ट विज्ञापन प्रदर्शित होंगे।',
+      testBadge: 'टेस्ट विज्ञापन',
+      setupTitle: 'गूगल एडमोब कॉन्फ़िगरेशन व सुरक्षा',
+      liveAdsNotice: 'ऑफिशियल गूगल टेस्ट आईडी सक्रिय है। प्ले स्टोर रिलीज से पहले अपनी असली आईडी जोड़ें।',
     },
     common: {
       copy: 'कॉपी करें',

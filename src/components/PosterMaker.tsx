@@ -15,6 +15,7 @@ import {
   Maximize2,
   Check,
 } from 'lucide-react';
+import { admobService } from '../services/admobService';
 
 interface PosterMakerProps {
   language: Language;
@@ -369,6 +370,8 @@ export const PosterMaker: React.FC<PosterMakerProps> = ({
       link.click();
       document.body.removeChild(link);
       onShowToast('success', t.poster.downloadSuccess);
+      // Natural transition point: trigger interstitial with cooldown
+      admobService.showInterstitial('poster-download').catch(() => {});
     } catch (err) {
       console.error('Download error:', err);
       onShowToast('error', t.common.error);
@@ -395,6 +398,7 @@ export const PosterMaker: React.FC<PosterMakerProps> = ({
             files: [file],
           });
           onShowToast('success', t.poster.share);
+          admobService.showInterstitial('poster-share').catch(() => {});
         } else {
           // Fallback download if share API not supported
           handleDownload();
@@ -419,6 +423,8 @@ export const PosterMaker: React.FC<PosterMakerProps> = ({
     const dataUrl = canvas.toDataURL('image/jpeg', 0.82); // compressed for localStorage
     onSaveProject('poster', config.headline || 'Untitled Poster', dataUrl, config);
     onShowToast('success', t.poster.savedSuccess);
+    // Natural transition point: trigger interstitial with cooldown
+    admobService.showInterstitial('poster-save').catch(() => {});
   };
 
   const handleReset = () => {

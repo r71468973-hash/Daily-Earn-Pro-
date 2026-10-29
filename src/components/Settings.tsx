@@ -22,6 +22,11 @@ import {
   LogOut,
   Flame,
 } from 'lucide-react';
+import {
+  ADMOB_TEST_CONFIG,
+  ADMOB_BANNER_AD_ID,
+  ADMOB_INTERSTITIAL_AD_ID,
+} from '../services/admobService';
 
 interface SettingsProps {
   language: Language;
@@ -51,6 +56,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const [showApkGuideModal, setShowApkGuideModal] = useState(false);
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+  const [showAdmobModal, setShowAdmobModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleLogout = async () => {
@@ -243,6 +249,36 @@ export const Settings: React.FC<SettingsProps> = ({
         >
           <span>{t.settings.viewApkGuide}</span>
           <ExternalLink className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Google AdMob Monetization Status & Guide */}
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <div>
+              <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                {t.settings.admobSection}
+              </h3>
+              <p className="text-[10px] text-slate-500">
+                Official Google Mobile Ads SDK v8 (Capacitor Android)
+              </p>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+            Test Mode Active
+          </span>
+        </div>
+        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          {t.settings.admobDesc}
+        </p>
+        <button
+          onClick={() => setShowAdmobModal(true)}
+          className="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl active:scale-98 transition-all flex items-center justify-center gap-1.5"
+        >
+          <span>{t.settings.viewAdmobGuide}</span>
+          <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
         </button>
       </div>
 
@@ -569,6 +605,97 @@ export const Settings: React.FC<SettingsProps> = ({
             >
               {t.common.close}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Google AdMob Modal */}
+      {showAdmobModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  Google AdMob Monetization & Policy Guide
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowAdmobModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-emerald-800 dark:text-emerald-300">
+                    {language === 'hi' ? 'ऑफिशियल गूगल टेस्ट मोड सक्रिय' : 'Official Google Test Ads Configured'}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    {language === 'hi'
+                      ? 'अकाउंट सुरक्षा और पॉलिसी अनुपालन के लिए विकास के दौरान टेस्ट एड यूनिट्स का उपयोग किया गया है।'
+                      : 'Complies with Google AdMob policies during development. Real production IDs can be set before Play Store submission.'}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-800 dark:text-white text-xs mb-1.5">
+                  {language === 'hi' ? 'वर्तमान में सक्रिय टेस्ट आईडी' : 'Currently Active Test IDs'}
+                </h4>
+                <div className="space-y-1.5 font-mono text-[10px]">
+                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <span className="text-slate-500 font-sans block mb-0.5">Sample App ID:</span>
+                    <span className="text-blue-600 dark:text-blue-400 select-all break-all">{ADMOB_TEST_CONFIG.appId}</span>
+                  </div>
+                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <span className="text-slate-500 font-sans block mb-0.5">Banner Ad Unit:</span>
+                    <span className="text-blue-600 dark:text-blue-400 select-all break-all">{ADMOB_BANNER_AD_ID}</span>
+                  </div>
+                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <span className="text-slate-500 font-sans block mb-0.5">Interstitial Ad Unit:</span>
+                    <span className="text-blue-600 dark:text-blue-400 select-all break-all">{ADMOB_INTERSTITIAL_AD_ID}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+                <h4 className="font-bold text-slate-800 dark:text-white text-xs mb-1.5">
+                  {language === 'hi' ? 'असली AdMob आईडी लगाने के 3 आसान कदम:' : '3 Easy Steps to Enter Production AdMob IDs:'}
+                </h4>
+                <ol className="list-decimal list-inside space-y-1.5 text-[11px]">
+                  <li>
+                    <strong>App ID:</strong> Open <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-blue-600">android/app/src/main/AndroidManifest.xml</code> and update the <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">&lt;meta-data android:name="com.google.android.gms.ads.APPLICATION_ID"&gt;</code> value.
+                  </li>
+                  <li>
+                    <strong>Banner & Interstitial:</strong> Set <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">VITE_ADMOB_BANNER_ID</code>, <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">VITE_ADMOB_INTERSTITIAL_ID</code>, and <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">VITE_ADMOB_IS_TESTING="false"</code> in <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">.env</code>.
+                  </li>
+                  <li>
+                    <strong>Build APK:</strong> Trigger GitHub Actions build or run <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">./gradlew assembleDebug</code>.
+                  </li>
+                </ol>
+              </div>
+
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300">
+                <p className="font-bold mb-1">⚠️ Google AdMob Policy Safeguards:</p>
+                <ul className="list-disc list-inside space-y-0.5 text-[10px]">
+                  <li>Never click your own live ads.</li>
+                  <li>Zero ads on Login, Sign Up, Password Reset & Admin screens.</li>
+                  <li>Interstitials only show upon completed actions with a 60s cooldown.</li>
+                </ul>
+              </div>
+
+              <button
+                onClick={() => setShowAdmobModal(false)}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl active:scale-98 transition-transform"
+              >
+                {t.common.close}
+              </button>
+            </div>
           </div>
         </div>
       )}

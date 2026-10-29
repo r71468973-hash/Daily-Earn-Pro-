@@ -15,6 +15,7 @@ import { MyWork } from './components/MyWork';
 import { EarningTips } from './components/EarningTips';
 import { Settings } from './components/Settings';
 import { AdminDashboard } from './components/AdminDashboard';
+import { admobService } from './services/admobService';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
@@ -51,6 +52,20 @@ function AppContent() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  // Initialize AdMob and enforce strict AdMob policies
+  // Never show ads on Auth Modal, Login, Password Reset, or Admin screens
+  useEffect(() => {
+    admobService.initialize().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const isRestricted = isAuthModalOpen || activeTab === 'admin';
+    admobService.setRestrictedMode(isRestricted);
+    if (activeTab !== 'home' || isRestricted) {
+      admobService.hideBanner().catch(() => {});
+    }
+  }, [activeTab, isAuthModalOpen]);
 
   const showToast = (type: 'success' | 'error' | 'info', message: string) => {
     setToast({

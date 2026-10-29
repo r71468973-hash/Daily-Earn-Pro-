@@ -16,6 +16,7 @@ import {
   Maximize2,
   Check,
 } from 'lucide-react';
+import { admobService } from '../services/admobService';
 
 interface ThumbnailMakerProps {
   language: Language;
@@ -311,6 +312,8 @@ export const ThumbnailMaker: React.FC<ThumbnailMakerProps> = ({
       link.click();
       document.body.removeChild(link);
       onShowToast('success', t.thumbnail.downloadSuccess);
+      // Natural transition point: trigger interstitial with cooldown
+      admobService.showInterstitial('thumbnail-download').catch(() => {});
     } catch (err) {
       console.error(err);
       onShowToast('error', t.common.error);
@@ -336,6 +339,7 @@ export const ThumbnailMaker: React.FC<ThumbnailMakerProps> = ({
             files: [file],
           });
           onShowToast('success', t.common.share);
+          admobService.showInterstitial('thumbnail-share').catch(() => {});
         } else {
           handleDownload();
           onShowToast('info', t.poster.shareUnsupported);
@@ -355,6 +359,8 @@ export const ThumbnailMaker: React.FC<ThumbnailMakerProps> = ({
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     onSaveProject('thumbnail', config.title || 'Untitled Thumbnail', dataUrl, config);
     onShowToast('success', t.thumbnail.savedSuccess);
+    // Natural transition point: trigger interstitial with cooldown
+    admobService.showInterstitial('thumbnail-save').catch(() => {});
   };
 
   const handleReset = () => {

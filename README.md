@@ -34,9 +34,13 @@
    - इंटरएक्टिव मासिक कमाई कैलकुलेटर।
    - **स्पष्ट नियम:** कोई फर्जी क्लिक-कमाई या सट्टा नहीं, यह असली हुनर और क्लाइंट वर्क से कमाई सिखाता है।
 
-6. **गूगल एडमोब (Google AdMob) तैयारी**
-   - सुरक्षित एडमोब प्लेसमेंट एरिया और एंड्रॉइड इंटीग्रेशन गाइड।
-   - पॉलिसी के अनुसार जब तक अपनी एड आईडी कॉन्फ़िगर नहीं की जाती, तब तक सभी विज्ञापन बंद रहते हैं।
+6. **गूगल एडमोब (Google AdMob) आधिकारिक इंटीग्रेशन**
+   - Official Google Mobile Ads SDK (`@capacitor-community/admob` v8) पूरी तरह कॉन्फ़िगर।
+   - **सुरक्षित टेस्ट मोड:** विकास और टेस्टिंग के दौरान गूगल के आधिकारिक टेस्ट विज्ञापन (Official Test Ad Units) लोड होते हैं।
+   - **होम डैशबोर्ड बैनर (Adaptive Banner):** केवल होम स्क्रीन पर गैर-बाधाकारी बैनर प्रदर्शित होता है।
+   - **इंटरस्टिशियल विज्ञापन (Interstitial Ads):** केवल पोस्टर/थंबनेल डाउनलोड या सेव करने के बाद स्वाभाविक समय पर 60 सेकंड के कूलडाउन के साथ प्रदर्शित होते हैं।
+   - **पॉलिसी अनुपालन:** लॉगिन, साइन-अप, पासवर्ड रीसेट और एडमिन डैशबोर्ड पर कोई भी विज्ञापन कभी नहीं दिखाया जाता।
+
 
 7. **नेटिव ऐप शेयर इंटीग्रेशन (Native App Share Feature)**
    - होम डैशबोर्ड पर 1-टैप शेयर बटन।
@@ -100,23 +104,42 @@ npx cap open android
 
 ---
 
-## 💰 भविष्य में गूगल एडमोब (AdMob) कैसे चालू करें
+## 💰 गूगल एडमोब (Google AdMob) सेटअप व लाइव विज्ञापन कैसे चालू करें
+ 
+Daily Earn Pro में **Official Google Mobile Ads SDK** (`@capacitor-community/admob`) पहले से ही जुड़ा हुआ है।
 
-जब आप ऐप को Google Play Store पर डालने के लिए तैयार हों:
-1. [Google AdMob](https://admob.google.com) पर अकाउंट बनाएं और एक नया Android App रजिस्टर करें।
-2. आपको एक **App ID** मिलेगा (उदा. `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`)।
-3. Capacitor AdMob प्लगइन इंस्टॉल करें:
-   ```bash
-   npm install @capacitor-community/admob
-   npx cap sync android
-   ```
-4. `android/app/src/main/AndroidManifest.xml` में `<application>` टैग के अंदर अपनी App ID जोड़ें:
+### वर्तमान टेस्ट स्थिति (Current Test Mode)
+विकास और टेस्टिंग के समय Google AdMob की पॉलिसी का सख्ती से पालन करने और खाते के निलंबन (Invalid Traffic Suspension) से बचने के लिए ऐप में **Google के आधिकारिक Test IDs** सेट हैं:
+- **Sample AdMob App ID:** `ca-app-pub-3940256099942544~3347511713`
+- **Test Banner Unit ID:** `ca-app-pub-3940256099942544/6300978111`
+- **Test Interstitial Unit ID:** `ca-app-pub-3940256099942544/1033173712`
+
+### जब आप अपनी असली (Live) AdMob आईडी डालने के लिए तैयार हों:
+1. [Google AdMob Console](https://admob.google.com) में जाएँ और नया Android App रजिस्टर करें (`Package Name: com.dailyearn.pro`)।
+2. AdMob में 1 **Banner Ad Unit** और 1 **Interstitial Ad Unit** बनाएँ।
+3. **App ID दर्ज करें:**
+   `android/app/src/main/AndroidManifest.xml` खोलें और इस लाइन में अपनी असली AdMob App ID डालें:
    ```xml
    <meta-data
        android:name="com.google.android.gms.ads.APPLICATION_ID"
-       android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY"/>
+       android:value="ca-app-pub-YOUR_PUBLISHER_ID~YOUR_APP_ID"/>
    ```
-5. Google की UMP (User Messaging Platform) SDK के तहत प्राइवेसी कंसेंट का पालन करें।
+4. **Ad Unit IDs दर्ज करें:**
+   प्रोजेक्ट की `.env` फ़ाइल में या GitHub Actions Repository Secrets / Environment Variables में ये सेट करें:
+   ```env
+   VITE_ADMOB_IS_TESTING="false"
+   VITE_ADMOB_BANNER_ID="ca-app-pub-YOUR_PUBLISHER_ID/BANNER_UNIT_ID"
+   VITE_ADMOB_INTERSTITIAL_ID="ca-app-pub-YOUR_PUBLISHER_ID/INTERSTITIAL_UNIT_ID"
+   ```
+5. **APK रीबिल्ड करें:**
+   GitHub Actions में जाकर **Build Android Debug APK** (या Release APK) दोबारा रन करें।
+
+### ⚠️ गूगल एडमोब नीतियां (Strict Policy Guidelines):
+- **अपने विज्ञापनों पर कभी क्लिक न करें:** टेस्टिंग के दौरान हमेशा टेस्ट ऐड्स का ही उपयोग करें।
+- **कोई अनिवार्य या बार-बार विज्ञापन नहीं:** इंटरस्टिशियल ऐड्स केवल स्वाभाविक एक्शन (जैसे पोस्टर/थंबनेल डाउनलोड या सेव होने) के बाद कम से कम 60 सेकंड के अंतराल (Frequency Cap Cooldown) पर आते हैं।
+- **प्रतिबंधित स्क्रीन्स:** लॉगिन, साइन अप, पासवर्ड रीसेट और एडमिन डैशबोर्ड पर कोई भी विज्ञापन प्रदर्शित नहीं होता।
+- **कमाई का झूठा दावा न करें:** किसी भी यूजर को पैसे कमाने के लिए विज्ञापन देखने हेतु प्रेरित (Incentivized) न करें।
+
 
 ---
 
@@ -140,8 +163,12 @@ npx cap open android
 
 - **समस्या: GitHub Actions में `package-lock.json` या dependency conflict की वजह से npm ci फेल हो रहा था?**
   - **समाधान:** `esbuild` और `vite` के पीयर-डिपेंडेंसी कनफ्लिक्ट को ठीक कर दिया गया है और `package-lock.json` को कंसिस्टेंट वर्शन के साथ जेनरेट कर दिया गया है।
-- **समस्या: GitHub Actions में Gradle build fail हो रहा है?**
-  - **समाधान:** सुनिश्चित करें कि `.github/workflows/build-android.yml` में `npx cap add android` और `chmod +x android/gradlew` शामिल है। यह वर्कफ्लो में पहले से कॉन्फ़िगर है।
+- **समस्या: GitHub Actions में Gradle build fail ("No file ... matched [**/gradle, **/gradle-wrapper.properties, **/gradle-wrapper.jar]")?**
+  - **समाधान:** 
+    1. वास्तविक `android/` फोल्डर, `android/gradlew`, `gradle-wrapper.properties` और `gradle-wrapper.jar` को रिपॉजिटरी में जनरेट और कमिट कर दिया गया है।
+    2. GitHub Actions वर्कफ्लो (`.github/workflows/build-android.yml`) में Android Gradle Plugin 8.13 के लिए आवश्यक Java 21 (`java-version: '21'`) सेट किया गया है और प्री-चेकआउट ग्रैडल कैशिंग की समस्या को ठीक कर दिया गया है।
+    3. `android/gradlew` को निष्पादन अधिकार (`chmod +x`) दिया गया है।
+    4. वर्कफ्लो सीधे `./gradlew assembleDebug --stacktrace` चलाकर `DailyEarnPro-v1.0.0-Debug-APK` आर्टिफैक्ट अपलोड करता है।
 - **समस्या: फोटो डाउनलोड होने के बाद गैलरी में नहीं दिख रही?**
   - **समाधान:** अपने फोन के "Downloads" या "Files" ऐप में जाएं। वहां `daily-earn-poster-*.png` नाम से फाइल मिल जाएगी।
 - **समस्या: AI कैप्शन काम नहीं कर रहा?**
