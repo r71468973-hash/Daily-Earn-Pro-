@@ -51376,7 +51376,7 @@ var __vitePreload = function preload(baseModule, deps, importerUrl) {
 		return baseModule().catch(handlePreloadError);
 	});
 };
-var AdMob = registerPlugin("AdMob", { web: () => __vitePreload(() => import("./web-C1O7rwza.js").then((m) => new m.AdMobWeb()), []) });
+var AdMob = registerPlugin("AdMob", { web: () => __vitePreload(() => import("./web-CnVN4dNo.js").then((m) => new m.AdMobWeb()), []) });
 // src/services/admobService.ts
 /**
 * Google Official Test Ad Unit IDs for Android:
@@ -51388,7 +51388,7 @@ var ADMOB_TEST_CONFIG = {
 	interstitialId: "ca-app-pub-3940256099942544/1033173712"
 };
 var IS_TEST_MODE = true;
-var ADMOB_BANNER_AD_ID = ADMOB_TEST_CONFIG.bannerId;
+var ADMOB_BANNER_AD_ID = "ca-app-pub-4935356006715377/5213502411";
 var ADMOB_INTERSTITIAL_AD_ID = ADMOB_TEST_CONFIG.interstitialId;
 var INTERSTITIAL_COOLDOWN_MS = 6e4;
 var AdMobService = class {
@@ -51648,7 +51648,7 @@ var AdMobPlaceholder = ({ language }) => {
 									children: "Banner Ad Unit ID:"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 									className: "text-blue-600 dark:text-blue-400 select-all break-all",
-									children: ADMOB_BANNER_AD_ID
+									children: "ca-app-pub-4935356006715377/5213502411"
 								})]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -51745,7 +51745,7 @@ var AdMobPlaceholder = ({ language }) => {
 	})] });
 };
 // node_modules/@capacitor/share/dist/esm/index.js
-var Share = registerPlugin("Share", { web: () => __vitePreload(() => import("./web-DPrFUh1O.js").then((m) => new m.ShareWeb()), []) });
+var Share = registerPlugin("Share", { web: () => __vitePreload(() => import("./web-CkqopTXu.js").then((m) => new m.ShareWeb()), []) });
 // src/services/shareService.ts
 function getAppShareUrl() {
 	if (typeof window !== "undefined" && window.location && window.location.origin) return window.location.origin;
@@ -54985,7 +54985,7 @@ var Settings = ({ language, onLanguageChange, theme, onThemeChange, onClearStora
 											children: "Banner Ad Unit:"
 										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 											className: "text-blue-600 dark:text-blue-400 select-all break-all",
-											children: ADMOB_BANNER_AD_ID
+											children: "ca-app-pub-4935356006715377/5213502411"
 										})]
 									}),
 									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
